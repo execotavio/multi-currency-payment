@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose run *)",
+      "Bash(Bash(cp *))",
+      "Bash(Bash(rm *))",
+      "Bash(docker compose up *)",
+      "Bash(curl *)",
+      "Bash(docker compose exec *)",
+      "Bash(make up *)",
+      "Bash(make test *)",
+      "Bash(make test *)",
+      "Bash(make coverage *)",
+      "Bash(Bash(make down *))",
+      "Bash(Bash(docker compose down *))",
+      "Bash(Bash(make up *))"
+    ]
+  }
+}
