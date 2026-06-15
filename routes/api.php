@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\PaymentRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function (): void {
@@ -11,3 +12,6 @@ Route::prefix('auth')->group(function (): void {
         return response()->json(['message' => 'ok']);
     })->middleware(['auth:api', 'role:finance']);
 });
+
+Route::post('/payment-requests', [PaymentRequestController::class, 'store'])
+    ->middleware(['auth:api', 'role:employee']);
