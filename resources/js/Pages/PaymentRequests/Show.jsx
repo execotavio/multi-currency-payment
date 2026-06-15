@@ -5,6 +5,7 @@ import RoleGate from '../../Components/RoleGate';
 import StatusBadge from '../../Components/StatusBadge';
 import AppLayout from '../../Layouts/AppLayout';
 import { api } from '../../lib/api';
+import { formatDateTime } from '../../lib/formatters';
 
 export default function Show() {
     const { paymentRequestId } = usePage().props;
@@ -52,7 +53,7 @@ export default function Show() {
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <h1 className="text-2xl font-semibold text-zinc-950">Request #{request.id}</h1>
-                                    <p className="mt-1 text-sm text-zinc-500">Created {request.created_at}</p>
+                                    <p className="mt-1 text-sm text-zinc-500">Created {formatDateTime(request.created_at)}</p>
                                 </div>
                                 <StatusBadge status={request.status} />
                             </div>
@@ -62,11 +63,11 @@ export default function Show() {
                                     ['Amount EUR', request.amount_eur],
                                     ['EUR to local rate', request.eur_to_local_rate],
                                     ['Rate source', request.rate_source],
-                                    ['Rate fetched at', request.rate_fetched_at],
-                                    ['Updated at', request.updated_at],
+                                    ['Rate fetched at', formatDateTime(request.rate_fetched_at)],
+                                    ['Updated at', formatDateTime(request.updated_at)],
                                     ['Reviewed by', request.reviewed_by ?? '—'],
-                                    ['Reviewed at', request.reviewed_at ?? '—'],
-                                    ['Expired at', request.expired_at ?? '—'],
+                                    ['Reviewed at', formatDateTime(request.reviewed_at)],
+                                    ['Expired at', formatDateTime(request.expired_at)],
                                 ].map(([label, value]) => (
                                     <div key={label} className="rounded-md border border-zinc-200 p-3">
                                         <dt className="text-xs font-medium uppercase text-zinc-500">{label}</dt>

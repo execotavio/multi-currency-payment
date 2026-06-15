@@ -6,6 +6,7 @@ use App\DTOs\RateDTO;
 use App\Exceptions\ExchangeRateProviderException;
 use App\Models\PaymentRequest;
 use App\Models\User;
+use App\Services\CurrencyService;
 use App\Services\ExchangeRateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -14,6 +15,15 @@ use Tests\TestCase;
 class CreatePaymentRequestTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mock(CurrencyService::class)
+            ->shouldReceive('supportedCodes')
+            ->andReturn(['BRL', 'USD', 'GBP', 'JPY', 'CAD']);
+    }
 
     public function test_employee_can_create_payment_request_with_exchange_rate_fields(): void
     {
@@ -114,6 +124,21 @@ class CreatePaymentRequestTest extends TestCase
             ->postJson('/api/payment-requests', [
                 'amount_local' => 110,
                 'currency' => 'BR1',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['currency']);
+    }
+
+    public function test_currency_must_be_supported(): void
+    {
+        $user = User::factory()->create(['role' => 'employee']);
+        $token = $user->createToken('auth_token')->accessToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/payment-requests', [
+                'amount_local' => 110,
+                'currency' => 'ZZZ',
             ]);
 
         $response->assertStatus(422)

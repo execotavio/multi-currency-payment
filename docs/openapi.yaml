@@ -122,6 +122,27 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/currencies:
+    get:
+      summary: List currencies supported by the exchange-rate provider
+      operationId: listCurrencies
+      responses:
+        '200':
+          description: Supported currency collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyListResponse'
+              example:
+                data:
+                  - code: BRL
+                    name: Brazilian Real
+                  - code: USD
+                    name: US Dollar
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '502':
+          $ref: '#/components/responses/ProviderBadGateway'
   /api/payment-requests:
     get:
       summary: List payment requests visible to the authenticated user
@@ -437,7 +458,8 @@ components:
           type: string
           minLength: 3
           maxLength: 3
-          pattern: ^[A-Za-z]{3}$
+          pattern: ^[A-Z]{3}$
+          description: Must be one of the codes returned by GET /api/currencies.
           example: BRL
     AuthResponse:
       type: object
@@ -483,6 +505,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PaymentRequest'
+    CurrencyListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Currency'
+    Currency:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: BRL
+        name:
+          type: string
+          example: Brazilian Real
     PaymentRequest:
       type: object
       required:

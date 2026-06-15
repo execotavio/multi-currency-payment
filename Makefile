@@ -1,4 +1,4 @@
-.PHONY: up down shell test migrate coverage prepare
+.PHONY: up down shell test migrate coverage prepare setup npm-install npm-dev npm-build
 
 up:
 	docker compose up -d --build
@@ -22,3 +22,14 @@ migrate: prepare
 
 coverage: prepare
 	docker compose exec app php artisan test --coverage
+
+npm-install:
+	docker compose exec node npm install
+
+npm-dev:
+	docker compose exec node npm run dev -- --host 0.0.0.0
+
+npm-build:
+	docker compose exec node npm run build
+
+setup: prepare npm-install migrate

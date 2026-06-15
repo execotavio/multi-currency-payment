@@ -1,10 +1,10 @@
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import RoleGate from '../../Components/RoleGate';
 import StatusBadge from '../../Components/StatusBadge';
 import AppLayout from '../../Layouts/AppLayout';
 import { api } from '../../lib/api';
 import ProtectedRoute from '../../Components/ProtectedRoute';
+import { formatDateTime } from '../../lib/formatters';
 
 const statuses = ['all', 'pending', 'approved', 'rejected', 'expired'];
 
@@ -43,11 +43,6 @@ export default function Index() {
                         <h1 className="text-2xl font-semibold text-zinc-950">Payment requests</h1>
                         <p className="mt-1 text-sm text-zinc-500">Track local amounts, EUR conversion, and review status.</p>
                     </div>
-                    <RoleGate allow="employee">
-                        <Link className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700" href="/payment-requests/create">
-                            New request
-                        </Link>
-                    </RoleGate>
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-2">
@@ -89,7 +84,7 @@ export default function Index() {
                                     <td className="px-4 py-3">{request.amount_eur}</td>
                                     <td className="px-4 py-3">{request.eur_to_local_rate}</td>
                                     <td className="px-4 py-3"><StatusBadge status={request.status} /></td>
-                                    <td className="px-4 py-3 text-zinc-500">{request.created_at}</td>
+                                    <td className="px-4 py-3 text-zinc-500">{formatDateTime(request.created_at)}</td>
                                 </tr>
                             ))}
                             {!loading && items.length === 0 && (

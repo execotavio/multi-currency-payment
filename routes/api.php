@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\PaymentRequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,9 @@ Route::prefix('auth')->group(function (): void {
         return response()->json(['message' => 'ok']);
     })->middleware(['auth:api', 'role:finance']);
 });
+
+Route::get('/currencies', [CurrencyController::class, 'index'])
+    ->middleware('auth:api');
 
 Route::get('/payment-requests', [PaymentRequestController::class, 'index'])
     ->middleware('auth:api');

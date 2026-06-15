@@ -6,11 +6,18 @@
    - `make up`
 2. Prepare a aplicação (dependências + `.env` + `APP_KEY`) e rode testes:
    - `make test`
-3. Execute migrações:
+3. Execute migrações e, se quiser, carregue dados demo:
    - `make migrate`
-4. Acesse a aplicação:
+   - `docker compose exec app php artisan db:seed`
+4. Instale e compile os assets do frontend:
+   - `make npm-install`
+   - `make npm-build`
+5. Acesse a aplicação:
    - `http://localhost:8080`
-5. Rode coverage:
+6. Durante desenvolvimento frontend, rode o Vite dev server:
+   - `make npm-dev`
+   - Vite: `http://localhost:5173`
+7. Rode coverage:
    - `make coverage`
 
 ## Docker e Coverage
@@ -28,6 +35,9 @@ O container PHP instala a extensão **PCOV** para cobertura de testes (mais leve
 - `make test` — prepara app e executa testes
 - `make migrate` — prepara app e executa migrações
 - `make coverage` — prepara app e executa coverage
+- `make npm-install` — instala dependências frontend no container `node`
+- `make npm-dev` — roda Vite no container `node` em foreground
+- `make npm-build` — gera assets em `public/build`
 
 ## Seeders
 

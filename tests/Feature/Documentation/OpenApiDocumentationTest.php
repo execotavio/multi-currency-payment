@@ -33,6 +33,7 @@ class OpenApiDocumentationTest extends TestCase
             '/api/auth/login' => ['post'],
             '/api/auth/logout' => ['post'],
             '/api/auth/finance-only' => ['get'],
+            '/api/currencies' => ['get'],
             '/api/payment-requests' => ['get', 'post'],
             '/api/payment-requests/{paymentRequest}' => ['get'],
             '/api/payment-requests/{paymentRequest}/approve' => ['post'],
@@ -61,7 +62,7 @@ class OpenApiDocumentationTest extends TestCase
             'bearerFormat' => 'Passport',
         ], $this->document['components']['securitySchemes']['bearerAuth']);
 
-        foreach (['PaymentRequest', 'User', 'Error', 'ValidationError', 'ProviderError'] as $schema) {
+        foreach (['PaymentRequest', 'User', 'Currency', 'CurrencyListResponse', 'Error', 'ValidationError', 'ProviderError'] as $schema) {
             $this->assertArrayHasKey($schema, $this->document['components']['schemas']);
         }
     }
@@ -90,5 +91,15 @@ class OpenApiDocumentationTest extends TestCase
         $this->assertSame('20.00', $createExample['amount_eur']);
         $this->assertSame('exchangerate-api', $createExample['rate_source']);
         $this->assertSame('5.500000', $createExample['eur_to_local_rate']);
+    }
+
+    public function test_payment_request_creation_documents_dynamic_supported_currency_contract(): void
+    {
+        $currency = $this->document['components']['schemas']['CreatePaymentRequestRequest']
+            ['properties']['currency'];
+
+        $this->assertSame('^[A-Z]{3}$', $currency['pattern']);
+        $this->assertStringContainsString('GET /api/currencies', $currency['description']);
+        $this->assertArrayHasKey('502', $this->document['paths']['/api/currencies']['get']['responses']);
     }
 }
