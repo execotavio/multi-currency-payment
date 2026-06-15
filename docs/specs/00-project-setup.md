@@ -26,6 +26,7 @@ Docker
       - web (nginx)
       - mysql
       - redis
+      - node
 
 Bootstrap do Laravel
   - Projeto Laravel criado
@@ -38,20 +39,30 @@ Makefile
   - make shell
   - make test
   - make migrate
+  - make npm-install
+  - make npm-dev
+  - make npm-build
 
 Test & Coverage readiness
   - Garantir que dentro do container é possível rodar:
       - php artisan test
       - php artisan test --coverage ou gerar coverage.xml/clover.xml
 
+Frontend
+  - Suporte ao node.js no container para compilar assets React/Inertia
+  - Comandos disponiveis no Makefile
+
 ## Acceptance criteria (checável)
 [ ] docker compose up -d sobe sem erro
 [ ] A home do Laravel responde em http://localhost:8080
 [ ] make test roda e passa
 [ ] Um comando de coverage executa sem quebrar
+[ ] make npm-install roda sem erro
+[ ] npm-build gera public/build/manifest.json
 
 ## DoD
 [ ] README (mínimo) com “como rodar” (3–5 passos)
 [ ] .env.example completo para subir no Docker
 [ ] make up + make test funcionam em máquina limpa
 [ ] Coverage command disponível
+[ ] Suporte a frontend via Docker/Make pronto
