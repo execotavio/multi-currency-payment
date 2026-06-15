@@ -17,5 +17,9 @@ Route::get('/payment-requests', [PaymentRequestController::class, 'index'])
     ->middleware('auth:api');
 Route::post('/payment-requests', [PaymentRequestController::class, 'store'])
     ->middleware(['auth:api', 'role:employee']);
+Route::post('/payment-requests/{paymentRequest}/approve', [PaymentRequestController::class, 'approve'])
+    ->middleware('auth:api');
+Route::post('/payment-requests/{paymentRequest}/reject', [PaymentRequestController::class, 'reject'])
+    ->middleware('auth:api');
 Route::get('/payment-requests/{paymentRequest}', [PaymentRequestController::class, 'show'])
     ->middleware('auth:api');

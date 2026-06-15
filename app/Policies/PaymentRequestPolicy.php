@@ -16,4 +16,14 @@ class PaymentRequestPolicy
     {
         return $user->isFinance() || ($user->isEmployee() && $paymentRequest->user_id === $user->id);
     }
+
+    public function approve(User $user, PaymentRequest $paymentRequest): bool
+    {
+        return $user->isFinance();
+    }
+
+    public function reject(User $user, PaymentRequest $paymentRequest): bool
+    {
+        return $user->isFinance();
+    }
 }
