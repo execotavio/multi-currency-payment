@@ -2,12 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ListPaymentRequestsRequest;
 use App\Http\Requests\StorePaymentRequestRequest;
+use App\Http\Resources\PaymentRequestResource;
+use App\Models\PaymentRequest;
 use App\Services\PaymentRequestCreationService;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 
 class PaymentRequestController extends Controller
 {
+    public function index(ListPaymentRequestsRequest $request): AnonymousResourceCollection
+    {
+        Gate::authorize('viewAny', PaymentRequest::class);
+
+        $user = $request->user();
+        $query = PaymentRequest::query();
+
+        if ($user->isEmployee()) {
+            $query->where('user_id', $user->id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->validated('status'));
+        }
+
+        return PaymentRequestResource::collection(
+            $query->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->get(),
+        );
+    }
+
     public function store(
         StorePaymentRequestRequest $request,
         PaymentRequestCreationService $paymentRequestCreationService,
@@ -18,15 +45,15 @@ class PaymentRequestController extends Controller
             $request->validated('currency'),
         );
 
-        return response()->json([
-            'id' => $paymentRequest->id,
-            'amount_local' => $paymentRequest->amount_local,
-            'currency' => $paymentRequest->currency,
-            'amount_eur' => $paymentRequest->amount_eur,
-            'status' => $paymentRequest->status->value,
-            'eur_to_local_rate' => $paymentRequest->eur_to_local_rate,
-            'rate_source' => $paymentRequest->rate_source,
-            'rate_fetched_at' => $paymentRequest->rate_fetched_at?->toISOString(),
-        ], 201);
+        return (new PaymentRequestResource($paymentRequest))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function show(PaymentRequest $paymentRequest): PaymentRequestResource
+    {
+        Gate::authorize('view', $paymentRequest);
+
+        return new PaymentRequestResource($paymentRequest);
     }
 }

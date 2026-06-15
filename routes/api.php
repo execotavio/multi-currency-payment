@@ -13,5 +13,9 @@ Route::prefix('auth')->group(function (): void {
     })->middleware(['auth:api', 'role:finance']);
 });
 
+Route::get('/payment-requests', [PaymentRequestController::class, 'index'])
+    ->middleware('auth:api');
 Route::post('/payment-requests', [PaymentRequestController::class, 'store'])
     ->middleware(['auth:api', 'role:employee']);
+Route::get('/payment-requests/{paymentRequest}', [PaymentRequestController::class, 'show'])
+    ->middleware('auth:api');
