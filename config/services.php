@@ -22,6 +22,15 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'exchange_rate' => [
+        'provider' => env('EXCHANGE_RATE_PROVIDER', 'exchangerate_api'),
+        'base_url' => env('EXCHANGE_RATE_BASE_URL', 'https://v6.exchangerate-api.com/v6'),
+        'api_key' => env('EXCHANGE_RATE_API_KEY'),
+        'timeout' => (int) env('EXCHANGE_RATE_TIMEOUT', 5),
+        'cache_ttl' => (int) env('EXCHANGE_RATE_CACHE_TTL', 3600),
+        'cache_store' => env('EXCHANGE_RATE_CACHE_STORE', 'redis'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
