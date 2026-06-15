@@ -28,3 +28,22 @@ O container PHP instala a extensão **PCOV** para cobertura de testes (mais leve
 - `make test` — prepara app e executa testes
 - `make migrate` — prepara app e executa migrações
 - `make coverage` — prepara app e executa coverage
+
+## Seeders
+
+Rode os dados de demonstração com:
+
+- `php artisan db:seed`
+- ou via Docker: `docker compose exec app php artisan db:seed`
+
+Credenciais seed:
+
+- Finance: `finance@example.com` / `password123`
+- Employees:
+  - `employee.br@example.com` / `password123`
+  - `employee.us@example.com` / `password123`
+  - `employee.gb@example.com` / `password123`
+  - `employee.jp@example.com` / `password123`
+  - `employee.ca@example.com` / `password123`
+
+Os payment requests seedados usam taxas fixas locais com `rate_source = seed` e não chamam API externa.
