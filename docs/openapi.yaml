@@ -1,0 +1,584 @@
+openapi: 3.1.0
+info:
+  title: Multi-Currency Payment API
+  version: 1.0.0
+  description: API for multi-currency payment requests, approval workflow, and exchange-rate-backed EUR conversion.
+servers:
+  - url: http://localhost:8080
+security:
+  - bearerAuth: []
+paths:
+  /api/auth/register:
+    post:
+      summary: Register an employee user
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              name: John Doe
+              email: john@example.com
+              password: password123
+              password_confirmation: password123
+              country: BR
+              currency: BRL
+      responses:
+        '201':
+          description: User registered and token issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                token: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+                token_type: Bearer
+                user:
+                  id: 1
+                  name: John Doe
+                  email: john@example.com
+                  role: employee
+                  country: BR
+                  currency: BRL
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/auth/login:
+    post:
+      summary: Login and receive a bearer token
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: john@example.com
+              password: password123
+      responses:
+        '200':
+          description: Authenticated user and token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                token: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+                token_type: Bearer
+                user:
+                  id: 1
+                  name: John Doe
+                  email: john@example.com
+                  role: employee
+                  country: BR
+                  currency: BRL
+        '401':
+          description: Invalid credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Invalid credentials
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/auth/logout:
+    post:
+      summary: Revoke the current bearer token
+      operationId: logoutUser
+      responses:
+        '200':
+          description: Token revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Logged out successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/auth/finance-only:
+    get:
+      summary: Check finance-only authorization
+      operationId: getFinanceOnlyProbe
+      responses:
+        '200':
+          description: Finance user is authorized.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: ok
+              example:
+                message: ok
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/payment-requests:
+    get:
+      summary: List payment requests visible to the authenticated user
+      operationId: listPaymentRequests
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, approved, rejected, expired]
+          example: pending
+      responses:
+        '200':
+          description: Payment request collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequestListResponse'
+              example:
+                data:
+                  - id: 1
+                    user_id: 1
+                    amount_local: "110.00"
+                    currency: BRL
+                    amount_eur: "20.00"
+                    status: pending
+                    eur_to_local_rate: "5.500000"
+                    rate_source: exchangerate-api
+                    rate_fetched_at: "2026-06-15T13:00:00.000000Z"
+                    reviewed_by: null
+                    reviewed_at: null
+                    expired_at: null
+                    created_at: "2026-06-15T13:00:00.000000Z"
+                    updated_at: "2026-06-15T13:00:00.000000Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      summary: Create a payment request in local currency
+      operationId: createPaymentRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequestRequest'
+            example:
+              amount_local: 110
+              currency: BRL
+      responses:
+        '201':
+          description: Payment request created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequest'
+              example:
+                id: 1
+                user_id: 1
+                amount_local: "110.00"
+                currency: BRL
+                amount_eur: "20.00"
+                status: pending
+                eur_to_local_rate: "5.500000"
+                rate_source: exchangerate-api
+                rate_fetched_at: "2026-06-15T13:00:00.000000Z"
+                reviewed_by: null
+                reviewed_at: null
+                expired_at: null
+                created_at: "2026-06-15T13:00:00.000000Z"
+                updated_at: "2026-06-15T13:00:00.000000Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '502':
+          $ref: '#/components/responses/ProviderBadGateway'
+  /api/payment-requests/{paymentRequest}:
+    get:
+      summary: Get a payment request by id
+      operationId: getPaymentRequest
+      parameters:
+        - $ref: '#/components/parameters/PaymentRequestId'
+      responses:
+        '200':
+          description: Payment request details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequest'
+              example:
+                id: 1
+                user_id: 1
+                amount_local: "110.00"
+                currency: BRL
+                amount_eur: "20.00"
+                status: approved
+                eur_to_local_rate: "5.500000"
+                rate_source: exchangerate-api
+                rate_fetched_at: "2026-06-15T13:00:00.000000Z"
+                reviewed_by: 2
+                reviewed_at: "2026-06-15T14:00:00.000000Z"
+                expired_at: null
+                created_at: "2026-06-15T13:00:00.000000Z"
+                updated_at: "2026-06-15T14:00:00.000000Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/payment-requests/{paymentRequest}/approve:
+    post:
+      summary: Approve a pending payment request
+      operationId: approvePaymentRequest
+      parameters:
+        - $ref: '#/components/parameters/PaymentRequestId'
+      responses:
+        '200':
+          description: Payment request approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequest'
+              example:
+                id: 1
+                user_id: 1
+                amount_local: "110.00"
+                currency: BRL
+                amount_eur: "20.00"
+                status: approved
+                eur_to_local_rate: "5.500000"
+                rate_source: exchangerate-api
+                rate_fetched_at: "2026-06-15T13:00:00.000000Z"
+                reviewed_by: 2
+                reviewed_at: "2026-06-15T14:00:00.000000Z"
+                expired_at: null
+                created_at: "2026-06-15T13:00:00.000000Z"
+                updated_at: "2026-06-15T14:00:00.000000Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/payment-requests/{paymentRequest}/reject:
+    post:
+      summary: Reject a pending payment request
+      operationId: rejectPaymentRequest
+      parameters:
+        - $ref: '#/components/parameters/PaymentRequestId'
+      responses:
+        '200':
+          description: Payment request rejected.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequest'
+              example:
+                id: 1
+                user_id: 1
+                amount_local: "110.00"
+                currency: BRL
+                amount_eur: "20.00"
+                status: rejected
+                eur_to_local_rate: "5.500000"
+                rate_source: exchangerate-api
+                rate_fetched_at: "2026-06-15T13:00:00.000000Z"
+                reviewed_by: 2
+                reviewed_at: "2026-06-15T14:00:00.000000Z"
+                expired_at: null
+                created_at: "2026-06-15T13:00:00.000000Z"
+                updated_at: "2026-06-15T14:00:00.000000Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Passport
+  parameters:
+    PaymentRequestId:
+      name: paymentRequest
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+  responses:
+    Unauthorized:
+      description: Missing or invalid bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Unauthenticated.
+    Forbidden:
+      description: Authenticated user is not allowed to perform the action.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            policy:
+              value:
+                message: This action is unauthorized.
+            roleMiddleware:
+              value:
+                message: Forbidden
+    NotFound:
+      description: Requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: No query results for model [App\Models\PaymentRequest] 999.
+    Conflict:
+      description: Payment request state transition is not allowed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            message: Only pending payment requests can be approved.
+    ValidationError:
+      description: Request validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+          example:
+            message: The given data was invalid.
+            errors:
+              currency:
+                - The currency field must be 3 characters.
+    ProviderBadGateway:
+      description: Exchange rate provider failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProviderError'
+          example:
+            message: "Exchange rate provider failed: quota-reached"
+            provider: exchangerate-api
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [name, email, password, password_confirmation, country, currency]
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: password123
+        password_confirmation:
+          type: string
+          format: password
+          example: password123
+        country:
+          type: string
+          example: BR
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: BRL
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+    CreatePaymentRequestRequest:
+      type: object
+      required: [amount_local, currency]
+      properties:
+        amount_local:
+          type: number
+          exclusiveMinimum: 0
+          example: 110
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: ^[A-Za-z]{3}$
+          example: BRL
+    AuthResponse:
+      type: object
+      required: [token, token_type, user]
+      properties:
+        token:
+          type: string
+          example: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...
+        token_type:
+          type: string
+          example: Bearer
+        user:
+          $ref: '#/components/schemas/User'
+    User:
+      type: object
+      required: [id, name, email, role, country, currency]
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        role:
+          type: string
+          enum: [employee, finance]
+          example: employee
+        country:
+          type: string
+          example: BR
+        currency:
+          type: string
+          example: BRL
+    PaymentRequestListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentRequest'
+    PaymentRequest:
+      type: object
+      required:
+        - id
+        - user_id
+        - amount_local
+        - currency
+        - amount_eur
+        - status
+        - eur_to_local_rate
+        - rate_source
+        - rate_fetched_at
+        - reviewed_by
+        - reviewed_at
+        - expired_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        amount_local:
+          type: string
+          example: "110.00"
+        currency:
+          type: string
+          example: BRL
+        amount_eur:
+          type: string
+          example: "20.00"
+        status:
+          type: string
+          enum: [pending, approved, rejected, expired]
+          example: pending
+        eur_to_local_rate:
+          type: string
+          example: "5.500000"
+        rate_source:
+          type: string
+          example: exchangerate-api
+        rate_fetched_at:
+          type: [string, "null"]
+          format: date-time
+          example: "2026-06-15T13:00:00.000000Z"
+        reviewed_by:
+          type: [integer, "null"]
+          example: null
+        reviewed_at:
+          type: [string, "null"]
+          format: date-time
+          example: null
+        expired_at:
+          type: [string, "null"]
+          format: date-time
+          example: null
+        created_at:
+          type: [string, "null"]
+          format: date-time
+          example: "2026-06-15T13:00:00.000000Z"
+        updated_at:
+          type: [string, "null"]
+          format: date-time
+          example: "2026-06-15T13:00:00.000000Z"
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: Unauthenticated.
+    ValidationError:
+      type: object
+      required: [message, errors]
+      properties:
+        message:
+          type: string
+          example: The given data was invalid.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            currency:
+              - The currency field must be 3 characters.
+    ProviderError:
+      type: object
+      required: [message, provider]
+      properties:
+        message:
+          type: string
+          example: "Exchange rate provider failed: quota-reached"
+        provider:
+          type: string
+          example: exchangerate-api
