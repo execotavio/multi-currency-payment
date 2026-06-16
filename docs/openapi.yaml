@@ -194,7 +194,6 @@ paths:
               $ref: '#/components/schemas/CreatePaymentRequestRequest'
             example:
               amount_local: 110
-              currency: BRL
       responses:
         '201':
           description: Payment request created.
@@ -449,19 +448,12 @@ components:
           example: password123
     CreatePaymentRequestRequest:
       type: object
-      required: [amount_local, currency]
+      required: [amount_local]
       properties:
         amount_local:
           type: number
           exclusiveMinimum: 0
           example: 110
-        currency:
-          type: string
-          minLength: 3
-          maxLength: 3
-          pattern: ^[A-Z]{3}$
-          description: Must be one of the codes returned by GET /api/currencies.
-          example: BRL
     AuthResponse:
       type: object
       required: [token, token_type, user]

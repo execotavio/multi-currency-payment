@@ -6,7 +6,6 @@ use App\DTOs\RateDTO;
 use App\Exceptions\ExchangeRateProviderException;
 use App\Models\PaymentRequest;
 use App\Models\User;
-use App\Services\CurrencyService;
 use App\Services\ExchangeRateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -16,18 +15,9 @@ class CreatePaymentRequestTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->mock(CurrencyService::class)
-            ->shouldReceive('supportedCodes')
-            ->andReturn(['BRL', 'USD', 'GBP', 'JPY', 'CAD']);
-    }
-
     public function test_employee_can_create_payment_request_with_exchange_rate_fields(): void
     {
-        $user = User::factory()->create(['role' => 'employee']);
+        $user = User::factory()->create(['role' => 'employee', 'currency' => 'BRL']);
         $token = $user->createToken('auth_token')->accessToken;
         $fetchedAt = Carbon::parse('2026-06-15 10:00:00');
 
@@ -44,7 +34,6 @@ class CreatePaymentRequestTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/payment-requests', [
                 'amount_local' => 110,
-                'currency' => 'BRL',
             ]);
 
         $response->assertCreated()
@@ -80,7 +69,6 @@ class CreatePaymentRequestTest extends TestCase
     {
         $response = $this->postJson('/api/payment-requests', [
             'amount_local' => 110,
-            'currency' => 'BRL',
         ]);
 
         $response->assertStatus(401);
@@ -94,7 +82,6 @@ class CreatePaymentRequestTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/payment-requests', [
                 'amount_local' => 110,
-                'currency' => 'BRL',
             ]);
 
         $response->assertStatus(403);
@@ -102,22 +89,21 @@ class CreatePaymentRequestTest extends TestCase
 
     public function test_amount_local_must_be_positive(): void
     {
-        $user = User::factory()->create(['role' => 'employee']);
+        $user = User::factory()->create(['role' => 'employee', 'currency' => 'BRL']);
         $token = $user->createToken('auth_token')->accessToken;
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/payment-requests', [
                 'amount_local' => 0,
-                'currency' => 'BRL',
             ]);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['amount_local']);
     }
 
-    public function test_currency_must_be_three_letters(): void
+    public function test_currency_cannot_be_sent_in_payload(): void
     {
-        $user = User::factory()->create(['role' => 'employee']);
+        $user = User::factory()->create(['role' => 'employee', 'currency' => 'BRL']);
         $token = $user->createToken('auth_token')->accessToken;
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
@@ -130,24 +116,35 @@ class CreatePaymentRequestTest extends TestCase
             ->assertJsonValidationErrors(['currency']);
     }
 
-    public function test_currency_must_be_supported(): void
+    public function test_request_uses_authenticated_users_currency(): void
     {
-        $user = User::factory()->create(['role' => 'employee']);
+        $user = User::factory()->create(['role' => 'employee', 'currency' => 'USD']);
         $token = $user->createToken('auth_token')->accessToken;
+        $fetchedAt = Carbon::parse('2026-06-15 10:00:00');
+
+        $this->mock(ExchangeRateService::class)
+            ->shouldReceive('getEurTo')
+            ->once()
+            ->with('USD')
+            ->andReturn(new RateDTO(
+                rate: 1.1,
+                source: 'exchangerate-api',
+                fetchedAt: $fetchedAt,
+            ));
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/payment-requests', [
                 'amount_local' => 110,
-                'currency' => 'ZZZ',
             ]);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['currency']);
+        $response->assertCreated()
+            ->assertJsonPath('currency', 'USD')
+            ->assertJsonPath('amount_eur', '100.00');
     }
 
     public function test_provider_failure_returns_bad_gateway_and_does_not_persist_payment_request(): void
     {
-        $user = User::factory()->create(['role' => 'employee']);
+        $user = User::factory()->create(['role' => 'employee', 'currency' => 'BRL']);
         $token = $user->createToken('auth_token')->accessToken;
 
         $this->mock(ExchangeRateService::class)
@@ -159,7 +156,6 @@ class CreatePaymentRequestTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/payment-requests', [
                 'amount_local' => 110,
-                'currency' => 'BRL',
             ]);
 
         $response->assertStatus(502)

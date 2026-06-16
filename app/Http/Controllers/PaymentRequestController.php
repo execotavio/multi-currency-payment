@@ -44,7 +44,7 @@ class PaymentRequestController extends Controller
         $paymentRequest = $paymentRequestCreationService->create(
             $request->user(),
             $request->validated('amount_local'),
-            $request->validated('currency'),
+            $request->user()->currency,
         );
 
         return (new PaymentRequestResource($paymentRequest))

@@ -93,13 +93,15 @@ class OpenApiDocumentationTest extends TestCase
         $this->assertSame('5.500000', $createExample['eur_to_local_rate']);
     }
 
-    public function test_payment_request_creation_documents_dynamic_supported_currency_contract(): void
+    public function test_payment_request_creation_uses_authenticated_user_currency(): void
     {
-        $currency = $this->document['components']['schemas']['CreatePaymentRequestRequest']
-            ['properties']['currency'];
+        $request = $this->document['components']['schemas']['CreatePaymentRequestRequest'];
+        $example = $this->document['paths']['/api/payment-requests']['post']
+            ['requestBody']['content']['application/json']['example'];
 
-        $this->assertSame('^[A-Z]{3}$', $currency['pattern']);
-        $this->assertStringContainsString('GET /api/currencies', $currency['description']);
+        $this->assertSame(['amount_local'], $request['required']);
+        $this->assertArrayNotHasKey('currency', $request['properties']);
+        $this->assertArrayNotHasKey('currency', $example);
         $this->assertArrayHasKey('502', $this->document['paths']['/api/currencies']['get']['responses']);
     }
 }
