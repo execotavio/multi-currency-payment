@@ -433,6 +433,8 @@ components:
           type: string
           minLength: 3
           maxLength: 3
+          pattern: ^[A-Z]{3}$
+          description: Must be one of the supported ISO 4217 currency codes returned by GET /api/currencies.
           example: BRL
     LoginRequest:
       type: object
