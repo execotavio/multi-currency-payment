@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Currencies;
 
-use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -11,14 +10,7 @@ class ListCurrenciesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_list_currencies_requires_authentication(): void
-    {
-        $response = $this->getJson('/api/currencies');
-
-        $response->assertStatus(401);
-    }
-
-    public function test_authenticated_user_can_list_supported_currencies(): void
+    public function test_guest_can_list_supported_currencies(): void
     {
         config()->set('services.exchange_rate.base_url', 'https://v6.exchangerate-api.test/v6');
         config()->set('services.exchange_rate.api_key', 'test-key');
@@ -38,11 +30,7 @@ class ListCurrenciesTest extends TestCase
             ]),
         ]);
 
-        $user = User::factory()->create();
-        $token = $user->createToken('auth_token')->accessToken;
-
-        $response = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->getJson('/api/currencies');
+        $response = $this->getJson('/api/currencies');
 
         $response->assertOk()
             ->assertJsonStructure([

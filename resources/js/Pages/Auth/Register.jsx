@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
-import { register } from '../../lib/api';
+import { useEffect, useState } from 'react';
+import { api, register } from '../../lib/api';
 
 const initialForm = {
     name: '',
@@ -13,9 +13,40 @@ const initialForm = {
 
 export default function Register() {
     const [form, setForm] = useState(initialForm);
+    const [currencies, setCurrencies] = useState([]);
+    const [currenciesLoading, setCurrenciesLoading] = useState(true);
     const [errors, setErrors] = useState({});
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        let active = true;
+
+        api.get('/currencies')
+            .then((response) => {
+                if (!active) return;
+
+                const options = response.data.data ?? [];
+
+                setCurrencies(options);
+                setForm((current) => ({
+                    ...current,
+                    currency: current.currency || (options[0]?.code ?? ''),
+                }));
+            })
+            .catch((error) => {
+                if (active) {
+                    setMessage(error.response?.data?.message ?? 'Unable to load currencies.');
+                }
+            })
+            .finally(() => {
+                if (active) setCurrenciesLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     async function submit(event) {
         event.preventDefault();
@@ -24,7 +55,7 @@ export default function Register() {
         setMessage('');
 
         try {
-            await register({ ...form, currency: form.currency.toUpperCase() });
+            await register(form);
             window.location.assign('/payment-requests');
         } catch (error) {
             setErrors(error.response?.data?.errors ?? {});
@@ -50,6 +81,30 @@ export default function Register() {
         );
     }
 
+    function currencyField() {
+        return (
+            <label className="block">
+                <span className="text-sm font-medium text-zinc-700">Currency</span>
+                <select
+                    className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 py-2"
+                    value={form.currency}
+                    onChange={(event) => setForm({ ...form, currency: event.target.value })}
+                    disabled={currenciesLoading || currencies.length === 0}
+                    required
+                >
+                    {currenciesLoading && <option value="">Loading...</option>}
+                    {!currenciesLoading && currencies.length === 0 && <option value="">No currencies available</option>}
+                    {currencies.map((currency) => (
+                        <option key={currency.code} value={currency.code}>
+                            {currency.code} - {currency.name}
+                        </option>
+                    ))}
+                </select>
+                {errors.currency && <span className="mt-1 block text-xs text-rose-700">{errors.currency[0]}</span>}
+            </label>
+        );
+    }
+
     return (
         <main className="flex min-h-screen items-center justify-center bg-[#f6f7f9] px-4 py-8">
             <form onSubmit={submit} className="w-full max-w-xl rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
@@ -58,12 +113,12 @@ export default function Register() {
                     {field('name', 'Name')}
                     {field('email', 'Email', 'email')}
                     {field('country', 'Country')}
-                    {field('currency', 'Currency')}
+                    {currencyField()}
                     {field('password', 'Password', 'password')}
                     {field('password_confirmation', 'Confirm password', 'password')}
                 </div>
                 {message && <p className="mt-4 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p>}
-                <button className="mt-6 w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60" disabled={loading}>
+                <button className="mt-6 w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60" disabled={loading || currenciesLoading || currencies.length === 0}>
                     {loading ? 'Creating account...' : 'Create account'}
                 </button>
                 <p className="mt-4 text-sm text-zinc-600">

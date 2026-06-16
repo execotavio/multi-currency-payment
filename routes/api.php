@@ -14,8 +14,7 @@ Route::prefix('auth')->group(function (): void {
     })->middleware(['auth:api', 'role:finance']);
 });
 
-Route::get('/currencies', [CurrencyController::class, 'index'])
-    ->middleware('auth:api');
+Route::get('/currencies', [CurrencyController::class, 'index']);
 
 Route::get('/payment-requests', [PaymentRequestController::class, 'index'])
     ->middleware('auth:api');
