@@ -70,6 +70,21 @@ class ExchangeRateServiceTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_eur_to_eur_returns_one_without_calling_provider(): void
+    {
+        Carbon::setTestNow('2026-06-15 10:00:00');
+        Http::fake();
+
+        $rate = app(ExchangeRateService::class)->getEurTo(' eur ');
+
+        $this->assertSame(1.0, $rate->rate);
+        $this->assertSame('exchangerate-api', $rate->source);
+        $this->assertTrue($rate->fetchedAt->isSameSecond(now()));
+        $this->assertFalse(Cache::store('array')->has('exchange_rate:eur_to:EUR'));
+
+        Http::assertNothingSent();
+    }
+
     public function test_connection_failures_throw_provider_exception(): void
     {
         Http::fake(function (): void {

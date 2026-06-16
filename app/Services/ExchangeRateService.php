@@ -16,6 +16,15 @@ class ExchangeRateService
     public function getEurTo(string $currency): RateDTO
     {
         $currency = $this->normalizeCurrency($currency);
+
+        if ($currency === 'EUR') {
+            return new RateDTO(
+                rate: 1.0,
+                source: self::SOURCE,
+                fetchedAt: now(),
+            );
+        }
+
         $cacheKey = sprintf('exchange_rate:eur_to:%s', $currency);
 
         return Cache::store((string) config('services.exchange_rate.cache_store'))
