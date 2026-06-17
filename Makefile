@@ -6,6 +6,9 @@ up:
 down:
 	docker compose down
 
+install:
+	docker compose exec app composer install
+
 shell:
 	docker compose exec app sh
 
@@ -19,6 +22,9 @@ test: prepare
 
 migrate: prepare
 	docker compose exec app php artisan migrate
+
+seed: prepare
+	docker compose exec app php artisan db:seed
 
 coverage: prepare
 	docker compose exec app php artisan test --coverage
