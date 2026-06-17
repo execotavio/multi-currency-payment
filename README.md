@@ -16,7 +16,8 @@ Passos:
    - `make up`
 2. Prepare a aplicação e rode os testes:
    - `make test`
-3. Configure as chaves externas no `.env` criado pelo passo anterior.
+3. Rode prepare e configure as chaves externas no `.env` criadas:
+   - `make prepare`
 4. Execute migrações e carregue dados demo:
    - `make migrate`
    - `make seed`
