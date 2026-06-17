@@ -1,4 +1,4 @@
-.PHONY: up down shell test migrate coverage prepare setup npm-install npm-dev npm-build
+.PHONY: up down install shell prepare test migrate seed coverage expire-pending schedule-work setup npm-install npm-dev npm-build
 
 up:
 	docker compose up -d --build
@@ -28,6 +28,12 @@ seed: prepare
 
 coverage: prepare
 	docker compose exec app php artisan test --coverage
+
+expire-pending: prepare
+	docker compose exec app php artisan payments:expire-pending
+
+schedule-work: prepare
+	docker compose exec app php artisan schedule:work
 
 npm-install:
 	docker compose exec node npm install

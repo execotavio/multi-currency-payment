@@ -2,22 +2,33 @@
 
 ## Como rodar (setup rápido)
 
+Pré-requisitos:
+
+- Docker com Docker Compose
+- `make`
+- Chaves para as integrações externas, se for usar cadastro e criação de requests pela UI:
+  - `EXCHANGE_RATE_API_KEY`
+  - `REST_COUNTRIES_API_KEY`
+
+Passos:
+
 1. Suba os containers com build:
    - `make up`
-2. Prepare a aplicação (dependências + `.env` + `APP_KEY`) e rode testes:
+2. Prepare a aplicação e rode os testes:
    - `make test`
-3. Execute migrações e, se quiser, carregue dados demo:
+3. Configure as chaves externas no `.env` criado pelo passo anterior.
+4. Execute migrações e carregue dados demo:
    - `make migrate`
-   - `docker compose exec app php artisan db:seed`
-4. Instale e compile os assets do frontend:
+   - `make seed`
+5. Instale e compile os assets do frontend:
    - `make npm-install`
    - `make npm-build`
-5. Acesse a aplicação:
+6. Acesse a aplicação:
    - `http://localhost:8080`
-6. Durante desenvolvimento frontend, rode o Vite dev server:
+7. Durante desenvolvimento frontend, rode o Vite dev server:
    - `make npm-dev`
    - Vite: `http://localhost:5173`
-7. Rode coverage:
+8. Rode coverage:
    - `make coverage`
 
 ## Documentação da API
@@ -37,28 +48,34 @@ Configure as chaves no `.env`:
 
 Payment requests pendentes por mais de 48 horas são expirados pelo comando:
 
-- `docker compose exec app php artisan payments:expire-pending`
+- `make expire-pending`
 
 Em ambiente com scheduler ativo, o Laravel executa esse comando de hora em hora via `routes/console.php`.
 Para rodar o scheduler localmente:
 
-- `docker compose exec app php artisan schedule:work`
+- `make schedule-work`
 
 ## Docker e Coverage
 
 O container PHP instala a extensão **PCOV** para cobertura de testes (mais leve que Xdebug).
 
 - Extensão instalada no `Dockerfile`: `pcov`
-- Coverage via: `php artisan test --coverage`
+- Coverage via: `make coverage`
 
 ## Comandos disponíveis
 
 - `make up` — sobe containers com build
 - `make down` — derruba containers
+- `make install` — instala dependências PHP com Composer
 - `make shell` — abre shell no container app
+- `make prepare` — instala Composer se necessário, cria `.env` e gera `APP_KEY`
 - `make test` — prepara app e executa testes
 - `make migrate` — prepara app e executa migrações
+- `make seed` — prepara app e executa seeders
 - `make coverage` — prepara app e executa coverage
+- `make expire-pending` — prepara app e expira payment requests pendentes há mais de 48 horas
+- `make schedule-work` — prepara app e executa o scheduler em foreground
+- `make setup` — executa `prepare`, `npm-install` e `migrate`
 - `make npm-install` — instala dependências frontend no container `node`
 - `make npm-dev` — roda Vite no container `node` em foreground
 - `make npm-build` — gera assets em `public/build`
@@ -67,8 +84,7 @@ O container PHP instala a extensão **PCOV** para cobertura de testes (mais leve
 
 Rode os dados de demonstração com:
 
-- `php artisan db:seed`
-- ou via Docker: `docker compose exec app php artisan db:seed`
+- `make seed`
 
 Credenciais seed:
 
