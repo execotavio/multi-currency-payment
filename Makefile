@@ -1,7 +1,7 @@
 .PHONY: up down install shell prepare test migrate seed coverage expire-pending schedule-work setup npm-install npm-dev npm-build
 
 up:
-	docker compose up -d --build
+	docker compose up -d --build --force-recreate --remove-orphans
 
 down:
 	docker compose down
@@ -16,6 +16,7 @@ prepare:
 	docker compose exec app sh -c 'if [ ! -f /app/vendor/autoload.php ]; then composer install; fi'
 	docker compose exec app sh -c 'if [ ! -f /app/.env ]; then cp /app/.env.example /app/.env; fi'
 	docker compose exec app sh -c 'if ! grep -q "^APP_KEY=base64:" /app/.env; then php artisan key:generate --force; fi'
+	docker compose exec app sh -c 'if [ ! -f /app/storage/oauth-private.key ] || [ ! -f /app/storage/oauth-public.key ]; then php artisan passport:keys --force; fi'
 
 test: prepare
 	docker compose exec app php artisan test

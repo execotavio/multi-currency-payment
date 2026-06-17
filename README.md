@@ -12,24 +12,29 @@ Pré-requisitos:
 
 Passos:
 
-1. Suba os containers com build:
+1. Crie o arquivo `.env` a partir do exemplo e preencha as chaves externas:
+   - `cp .env.example .env`
+   - Configure `EXCHANGE_RATE_API_KEY`
+   - Configure `REST_COUNTRIES_API_KEY`
+2. Suba os containers com build:
    - `make up`
-2. Prepare a aplicação e rode os testes:
-   - `make test`
-3. Rode prepare e configure as chaves externas no `.env` criadas:
+3. Prepare a aplicação:
    - `make prepare`
-4. Execute migrações e carregue dados demo:
+   - Esse comando instala as dependências PHP, garante o `APP_KEY` e gera as chaves do Laravel Passport.
+4. Rode os testes:
+   - `make test`
+5. Execute migrações e carregue dados demo:
    - `make migrate`
    - `make seed`
-5. Instale e compile os assets do frontend:
+6. Instale e compile os assets do frontend:
    - `make npm-install`
    - `make npm-build`
-6. Acesse a aplicação:
+7. Acesse a aplicação:
    - `http://localhost:8080`
-7. Durante desenvolvimento frontend, rode o Vite dev server:
+8. Durante desenvolvimento frontend, rode o Vite dev server:
    - `make npm-dev`
    - Vite: `http://localhost:5173`
-8. Rode coverage:
+9. Rode coverage:
    - `make coverage`
 
 ## Documentação da API
@@ -65,11 +70,11 @@ O container PHP instala a extensão **PCOV** para cobertura de testes (mais leve
 
 ## Comandos disponíveis
 
-- `make up` — sobe containers com build
+- `make up` — sobe containers com build e recria containers do projeto
 - `make down` — derruba containers
 - `make install` — instala dependências PHP com Composer
 - `make shell` — abre shell no container app
-- `make prepare` — instala Composer se necessário, cria `.env` e gera `APP_KEY`
+- `make prepare` — instala Composer se necessário, cria `.env`, gera `APP_KEY` e gera chaves do Passport
 - `make test` — prepara app e executa testes
 - `make migrate` — prepara app e executa migrações
 - `make seed` — prepara app e executa seeders
