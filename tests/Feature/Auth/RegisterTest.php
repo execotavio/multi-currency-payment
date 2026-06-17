@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Services\CountryService;
 use App\Services\CurrencyService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,6 +18,10 @@ class RegisterTest extends TestCase
         $this->mock(CurrencyService::class)
             ->shouldReceive('supportedCodes')
             ->andReturn(['BRL', 'USD', 'GBP', 'JPY', 'CAD']);
+
+        $this->mock(CountryService::class)
+            ->shouldReceive('supportedCodes')
+            ->andReturn(['BR', 'US', 'GB', 'JP', 'CA']);
     }
 
     public function test_user_can_register_and_receive_token(): void
@@ -68,6 +73,25 @@ class RegisterTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['country', 'currency']);
+    }
+
+    public function test_register_country_must_be_supported(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'John Doe',
+            'email' => 'john5@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'country' => 'XX',
+            'currency' => 'BRL',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['country']);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'john5@example.com',
+        ]);
     }
 
     public function test_register_currency_must_be_three_letters(): void

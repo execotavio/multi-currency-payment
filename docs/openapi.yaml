@@ -142,6 +142,26 @@ paths:
                     name: US Dollar
         '502':
           $ref: '#/components/responses/ProviderBadGateway'
+  /api/countries:
+    get:
+      summary: List countries supported by the country provider
+      operationId: listCountries
+      security: []
+      responses:
+        '200':
+          description: Supported country collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountryListResponse'
+              example:
+                data:
+                  - code: BR
+                    name: Brazil
+                  - code: US
+                    name: United States
+        '502':
+          $ref: '#/components/responses/CountryProviderBadGateway'
   /api/payment-requests:
     get:
       summary: List payment requests visible to the authenticated user
@@ -403,6 +423,15 @@ components:
           example:
             message: "Exchange rate provider failed: quota-reached"
             provider: exchangerate-api
+    CountryProviderBadGateway:
+      description: Country provider failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProviderError'
+          example:
+            message: "Country provider failed: missing API key"
+            provider: restcountries
   schemas:
     RegisterRequest:
       type: object
@@ -426,6 +455,10 @@ components:
           example: password123
         country:
           type: string
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          description: Must be one of the supported ISO 3166-1 alpha-2 country codes returned by GET /api/countries.
           example: BR
         currency:
           type: string
@@ -519,6 +552,27 @@ components:
         name:
           type: string
           example: Brazilian Real
+    CountryListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Country'
+    Country:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          example: BR
+        name:
+          type: string
+          example: Brazil
     PaymentRequest:
       type: object
       required:

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\DTOs\RateDTO;
 use App\Exceptions\ExchangeRateProviderException;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 
@@ -25,14 +24,7 @@ class ExchangeRateService
             );
         }
 
-        $cacheKey = sprintf('exchange_rate:eur_to:%s', $currency);
-
-        return Cache::store((string) config('services.exchange_rate.cache_store'))
-            ->remember(
-                $cacheKey,
-                (int) config('services.exchange_rate.cache_ttl'),
-                fn (): RateDTO => $this->fetchEurTo($currency),
-            );
+        return $this->fetchEurTo($currency);
     }
 
     private function normalizeCurrency(string $currency): string

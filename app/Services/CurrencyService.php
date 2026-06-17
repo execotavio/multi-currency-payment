@@ -38,7 +38,7 @@ class CurrencyService
         $apiKey = config('services.exchange_rate.api_key');
 
         if (! is_string($apiKey) || trim($apiKey) === '') {
-            throw ExchangeRateProviderException::forProviderFailure('missing API key');
+            throw ExchangeRateProviderException::forProviderFailure('missing Currency API key');
         }
 
         try {

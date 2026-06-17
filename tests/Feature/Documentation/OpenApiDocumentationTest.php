@@ -33,6 +33,7 @@ class OpenApiDocumentationTest extends TestCase
             '/api/auth/login' => ['post'],
             '/api/auth/logout' => ['post'],
             '/api/auth/finance-only' => ['get'],
+            '/api/countries' => ['get'],
             '/api/currencies' => ['get'],
             '/api/payment-requests' => ['get', 'post'],
             '/api/payment-requests/{paymentRequest}' => ['get'],
@@ -62,7 +63,7 @@ class OpenApiDocumentationTest extends TestCase
             'bearerFormat' => 'Passport',
         ], $this->document['components']['securitySchemes']['bearerAuth']);
 
-        foreach (['PaymentRequest', 'User', 'Currency', 'CurrencyListResponse', 'Error', 'ValidationError', 'ProviderError'] as $schema) {
+        foreach (['PaymentRequest', 'User', 'Country', 'CountryListResponse', 'Currency', 'CurrencyListResponse', 'Error', 'ValidationError', 'ProviderError'] as $schema) {
             $this->assertArrayHasKey($schema, $this->document['components']['schemas']);
         }
     }
@@ -103,5 +104,15 @@ class OpenApiDocumentationTest extends TestCase
         $this->assertArrayNotHasKey('currency', $request['properties']);
         $this->assertArrayNotHasKey('currency', $example);
         $this->assertArrayHasKey('502', $this->document['paths']['/api/currencies']['get']['responses']);
+    }
+
+    public function test_registration_documents_dynamic_supported_country_contract(): void
+    {
+        $country = $this->document['components']['schemas']['RegisterRequest']
+            ['properties']['country'];
+
+        $this->assertSame('^[A-Z]{2}$', $country['pattern']);
+        $this->assertStringContainsString('GET /api/countries', $country['description']);
+        $this->assertArrayHasKey('502', $this->document['paths']['/api/countries']['get']['responses']);
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\PaymentRequestController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,7 @@ Route::prefix('auth')->group(function (): void {
 });
 
 Route::get('/currencies', [CurrencyController::class, 'index']);
+Route::get('/countries', [CountryController::class, 'index']);
 
 Route::get('/payment-requests', [PaymentRequestController::class, 'index'])
     ->middleware('auth:api');

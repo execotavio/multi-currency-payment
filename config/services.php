@@ -31,6 +31,14 @@ return [
         'cache_store' => env('EXCHANGE_RATE_CACHE_STORE', 'redis'),
     ],
 
+    'rest_countries' => [
+        'base_url' => env('REST_COUNTRIES_BASE_URL', 'https://api.restcountries.com/countries/v5'),
+        'api_key' => env('REST_COUNTRIES_API_KEY'),
+        'timeout' => (int) env('REST_COUNTRIES_TIMEOUT', 5),
+        'cache_ttl' => (int) env('REST_COUNTRIES_CACHE_TTL', 86400),
+        'cache_store' => env('REST_COUNTRIES_CACHE_STORE', env('EXCHANGE_RATE_CACHE_STORE', 'redis')),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

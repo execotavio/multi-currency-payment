@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Services;
 
-use App\DTOs\RateDTO;
 use App\Exceptions\ExchangeRateProviderException;
 use App\Services\ExchangeRateService;
 use Illuminate\Http\Client\ConnectionException;
@@ -28,7 +27,7 @@ class ExchangeRateServiceTest extends TestCase
         Cache::store('array')->flush();
     }
 
-    public function test_cache_miss_fetches_rate_from_provider_and_caches_it(): void
+    public function test_fetches_rate_from_provider(): void
     {
         Carbon::setTestNow('2026-06-15 10:00:00');
 
@@ -48,26 +47,32 @@ class ExchangeRateServiceTest extends TestCase
         $this->assertSame('exchangerate-api', $rate->source);
         $this->assertInstanceOf(Carbon::class, $rate->fetchedAt);
         $this->assertTrue($rate->fetchedAt->isSameSecond(now()));
-        $this->assertTrue(Cache::store('array')->has('exchange_rate:eur_to:USD'));
+        $this->assertFalse(Cache::store('array')->has('exchange_rate:eur_to:USD'));
 
         Http::assertSentCount(1);
     }
 
-    public function test_cache_hit_returns_cached_dto_without_calling_provider(): void
+    public function test_each_call_fetches_a_fresh_rate_from_provider(): void
     {
-        $cachedRate = new RateDTO(
-            rate: 1.111111,
-            source: 'exchangerate-api',
-            fetchedAt: Carbon::parse('2026-06-15 09:00:00'),
-        );
+        Http::fakeSequence()
+            ->push([
+                'result' => 'success',
+                'conversion_rate' => 1.1,
+            ])
+            ->push([
+                'result' => 'success',
+                'conversion_rate' => 1.2,
+            ]);
 
-        Cache::store('array')->put('exchange_rate:eur_to:USD', $cachedRate, 3600);
-        Http::fake();
+        $service = app(ExchangeRateService::class);
 
-        $rate = app(ExchangeRateService::class)->getEurTo('USD');
+        $firstRate = $service->getEurTo('USD');
+        $secondRate = $service->getEurTo('USD');
 
-        $this->assertSame($cachedRate, $rate);
-        Http::assertNothingSent();
+        $this->assertSame(1.1, $firstRate->rate);
+        $this->assertSame(1.2, $secondRate->rate);
+        $this->assertFalse(Cache::store('array')->has('exchange_rate:eur_to:USD'));
+        Http::assertSentCount(2);
     }
 
     public function test_eur_to_eur_returns_one_without_calling_provider(): void
@@ -137,7 +142,7 @@ class ExchangeRateServiceTest extends TestCase
         app(ExchangeRateService::class)->getEurTo('USD');
     }
 
-    public function test_currency_is_normalized_before_fetching_and_caching(): void
+    public function test_currency_is_normalized_before_fetching(): void
     {
         Http::fake([
             'https://v6.exchangerate-api.test/v6/test-key/pair/EUR/USD' => Http::response([
@@ -148,7 +153,7 @@ class ExchangeRateServiceTest extends TestCase
 
         app(ExchangeRateService::class)->getEurTo(' usd ');
 
-        $this->assertTrue(Cache::store('array')->has('exchange_rate:eur_to:USD'));
+        $this->assertFalse(Cache::store('array')->has('exchange_rate:eur_to:USD'));
         Http::assertSent(function ($request): bool {
             return $request->url() === 'https://v6.exchangerate-api.test/v6/test-key/pair/EUR/USD';
         });

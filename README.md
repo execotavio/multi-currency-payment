@@ -20,6 +20,30 @@
 7. Rode coverage:
    - `make coverage`
 
+## Documentação da API
+
+A especificação OpenAPI com métodos, URLs, parâmetros e exemplos está em:
+
+- `docs/openapi.yaml`
+
+## Integrações externas
+
+Configure as chaves no `.env`:
+
+- `EXCHANGE_RATE_API_KEY` para taxas EUR → moeda local.
+- `REST_COUNTRIES_API_KEY` para listar países no cadastro. A API atual do REST Countries v5 exige bearer token.
+
+## Scheduler
+
+Payment requests pendentes por mais de 48 horas são expirados pelo comando:
+
+- `docker compose exec app php artisan payments:expire-pending`
+
+Em ambiente com scheduler ativo, o Laravel executa esse comando de hora em hora via `routes/console.php`.
+Para rodar o scheduler localmente:
+
+- `docker compose exec app php artisan schedule:work`
+
 ## Docker e Coverage
 
 O container PHP instala a extensão **PCOV** para cobertura de testes (mais leve que Xdebug).
